@@ -41,6 +41,15 @@ let isSpeaking = false;
 const audioQueue = [];
 let playing = false;
 
+// Surface any JS error on screen (so you don't need to open DevTools).
+window.addEventListener("error", (e) => {
+  if (els.assistantLine) els.assistantLine.textContent = "JSエラー: " + e.message;
+});
+window.addEventListener("unhandledrejection", (e) => {
+  const m = e.reason && e.reason.message ? e.reason.message : String(e.reason);
+  if (els.assistantLine) els.assistantLine.textContent = "JSエラー: " + m;
+});
+
 function setState(value) {
   const [text, cls] = STATE_TEXT[value] || [value, "state-idle"];
   els.badge.textContent = text;
@@ -67,9 +76,11 @@ async function initLive2D() {
   });
 
   const url = encodeURI(cfg.model);
-  model = await PIXI.live2d.Live2DModel.from(url, { autoUpdate: false });
+  // Let the plugin auto-update the model on the shared ticker (the reliable,
+  // documented default). We only override the mouth parameter afterwards.
+  model = await PIXI.live2d.Live2DModel.from(url);
   app.stage.addChild(model);
-  model.anchor.set(0.5, 0.5);
+  try { model.anchor.set(0.5, 0.5); } catch (e) { /* older API */ }
 
   const layout = () => {
     if (!model) return;
@@ -86,11 +97,9 @@ async function initLive2D() {
   window.addEventListener("resize", layout);
   console.log("[live2d] loaded", { model: url, baseHeight: model.height });
 
-  // Deterministic update: advance the model, then override the mouth, then
-  // PixiJS renders the frame.
+  // Drive the mouth from the live audio level (runs each frame).
   app.ticker.add(() => {
-    model.update(app.ticker.deltaMS);
-
+    if (!model) return;
     let target = 0;
     if (isSpeaking && analyser) {
       analyser.getFloatTimeDomainData(timeData);
