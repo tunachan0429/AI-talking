@@ -56,6 +56,11 @@ async function initLive2D() {
     throw new Error("Live2D ライブラリの読み込みに失敗しました（ネット接続と live2dcubismcore.min.js を確認）");
   }
 
+  // Show which versions are actually loaded (helps confirm cache was cleared).
+  const coreOk = !!(window.Live2DCubismCore);
+  els.userLine.textContent =
+    "PIXI " + (PIXI.VERSION || "?") + " / core:" + (coreOk ? "ok" : "NG");
+
   const cfg = await (await fetch("/api/config")).json();
   const heightFraction = cfg.scale || 0.9;
   const yAnchor = cfg.yAnchor != null ? cfg.yAnchor : 0.5;
@@ -69,7 +74,13 @@ async function initLive2D() {
   });
 
   const url = encodeURI(cfg.model);
-  model = await PIXI.live2d.Live2DModel.from(url); // auto-updates via window.PIXI
+  model = await PIXI.live2d.Live2DModel.from(url, {
+    autoInteract: false,
+    onError: (e) => {
+      els.assistantLine.textContent =
+        "モデルエラー: " + (e && e.message ? e.message : String(e));
+    },
+  });
   app.stage.addChild(model);
   try { model.anchor.set(0.5, 0.5); } catch (e) { /* older API */ }
 

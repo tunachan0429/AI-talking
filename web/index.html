@@ -6,9 +6,9 @@
   <title>AI-talking — Live2D</title>
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Live2D Cubism 4 core runtime. Copy live2dcubismcore.min.js from your
-       model package into web/live2d/ (it ships with the 八千代輝夜姫 files). -->
-  <script src="live2d/live2dcubismcore.min.js"></script>
+  <!-- Live2D Cubism core runtime (official latest, supports all moc3 versions).
+       Falls back to your local copy in web/live2d/ if offline. -->
+  <script crossorigin="anonymous" src="https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js"></script>
 
   <!-- PixiJS v7 + pixi-live2d-display-lipsyncpatch (Cubism 4 build) from CDN.
        This fork supports modern VTube Studio models and has built-in lip-sync.
