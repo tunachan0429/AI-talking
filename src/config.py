@@ -83,8 +83,9 @@ class Live2DConfig:
     # zoom = full model height as a multiple of screen height (bigger = larger).
     # ~3.0 gives a large close-up bust view; ~0.9 shows the whole body.
     scale: float = 3.0
-    # y_anchor = where the top of the head sits (0 = very top of screen).
-    y_anchor: float = 0.02
+    # y_anchor = vertical position of the head top (negative moves the avatar
+    # up so more of the lower body comes into frame).
+    y_anchor: float = -0.1
     # x_anchor = horizontal position (0=left ... 1=right). ~0.68 fills the
     # space to the right of the comments panel.
     x_anchor: float = 0.68

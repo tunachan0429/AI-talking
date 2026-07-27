@@ -99,7 +99,7 @@ live2d:
   mouth_param: ParamMouthOpenY   # Cubism default mouth-open parameter
   scale: 3.0                     # zoom: full-body height ÷ screen height.
                                  #   ~3.0 = large close-up, ~0.9 = whole body
-  y_anchor: 0.02                 # top of the head position (0=very top, bigger=下)
+  y_anchor: -0.1                 # vertical position (マイナス=上へ移動して下半身が見える)
   x_anchor: 0.68                 # horizontal position (0=left ... 1=right)
 
 # ---------------------------------------------------------------------
