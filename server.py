@@ -112,11 +112,32 @@ async def _startup() -> None:
     _loop = asyncio.get_running_loop()
 
 
+def _resolve_model_path() -> str:
+    """Return the web-relative path to the Live2D .model3.json.
+
+    Uses the configured path if it exists; otherwise auto-detects the first
+    *.model3.json found in web/live2d/. This spares the user from having to
+    match the exact (often non-ASCII) file name in config.yaml.
+    """
+    configured = CFG.live2d.model
+    if os.path.exists(os.path.join(WEB_DIR, configured)):
+        return configured.replace(os.sep, "/")
+
+    live2d_dir = os.path.join(WEB_DIR, "live2d")
+    if os.path.isdir(live2d_dir):
+        matches = sorted(
+            f for f in os.listdir(live2d_dir) if f.lower().endswith(".model3.json")
+        )
+        if matches:
+            return "live2d/" + matches[0]
+    return configured  # let the browser report the load error
+
+
 @app.get("/api/config")
 async def api_config() -> JSONResponse:
     return JSONResponse(
         {
-            "model": CFG.live2d.model,
+            "model": _resolve_model_path(),
             "mouthParam": CFG.live2d.mouth_param,
             "scale": CFG.live2d.scale,
             "yAnchor": CFG.live2d.y_anchor,
