@@ -61,9 +61,22 @@ llm:
 # TTS - Text To Speech (Kokoro, female voice)
 # ---------------------------------------------------------------------
 tts:
-  engine: kokoro
+  # "voicevox" -> local VOICEVOX server (recommended on Windows: no compiler,
+  #               great Japanese female voices). Start the VOICEVOX app first.
+  # "kokoro"   -> Kokoro model (needs pyopenjtalk build for Japanese)
+  engine: voicevox
+
+  # --- VOICEVOX ---
+  # Female speaker IDs (styles):
+  #   2  = 四国めたん (ノーマル)     3  = ずんだもん (ノーマル)
+  #   8  = 春日部つむぎ              10 = 雨晴はう (やわらかい)
+  #   9  = 波音リツ                  14 = 冥鳴ひまり
+  speaker: 2
+  base_url: http://127.0.0.1:50021
+  speed: 1.0
+
+  # --- Kokoro (only used when engine: kokoro) ---
   # Japanese female voices: jf_alpha, jf_gongitsune, jf_nezumi, jf_tebukuro
   # English female voices:  af_heart, af_bella, af_sarah
   voice: jf_alpha
   lang_code: j              # 'j' = Japanese, 'a' = American English
-  speed: 1.0

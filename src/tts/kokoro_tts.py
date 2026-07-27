@@ -51,7 +51,15 @@ class KokoroTTS:
 
 
 def build_tts(cfg: TTSConfig, device: str = "cpu"):
-    """Factory so other TTS engines can be plugged in later."""
+    """Factory so other TTS engines can be plugged in.
+
+    - "voicevox": local VOICEVOX server (recommended on Windows, no compiler)
+    - "kokoro":   Kokoro model (needs pyopenjtalk build for Japanese)
+    """
+    if cfg.engine == "voicevox":
+        from .voicevox_tts import VoicevoxTTS
+
+        return VoicevoxTTS(cfg, device=device)
     if cfg.engine == "kokoro":
         return KokoroTTS(cfg, device=device)
     raise ValueError(f"Unknown TTS engine: {cfg.engine}")

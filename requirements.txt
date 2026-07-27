@@ -16,8 +16,12 @@ faster-whisper>=1.0.3    # fast Whisper implementation (CTranslate2)
 llama-cpp-python>=0.3.2  # runs GGUF models via llama.cpp
 
 # === TTS (Text-To-Speech, female voice) ===
-kokoro>=0.9.2            # lightweight multilingual TTS with female voices
-misaki[ja]>=0.9.3        # Kokoro G2P incl. Japanese support
+# Default engine is VOICEVOX (a separate local app). We only need an HTTP
+# client here - no compilation required on Windows.
+requests>=2.31
+# Optional: to use the Kokoro engine instead, install these (Japanese needs a
+# C++ compiler to build pyopenjtalk):
+#   pip install kokoro>=0.9.2 "misaki[ja]>=0.9.3"
 
 # === Utilities ===
 pyyaml>=6.0

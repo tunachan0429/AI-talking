@@ -58,7 +58,11 @@ class LLMConfig:
 
 @dataclass
 class TTSConfig:
-    engine: str = "kokoro"
+    engine: str = "voicevox"
+    # VOICEVOX settings
+    speaker: int = 2
+    base_url: str = "http://127.0.0.1:50021"
+    # Kokoro settings (only used when engine == "kokoro")
     voice: str = "jf_alpha"
     lang_code: str = "j"
     speed: float = 1.0

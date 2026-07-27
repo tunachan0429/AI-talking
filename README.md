@@ -177,36 +177,41 @@ RTX 2070 でも問題なく動きます。VRAM が 8GB なので、**LLM は 3B 
 - Python 3.10〜3.12
 - Git
 
-### Windows の場合
+> **Windows ではC++コンパイラ不要の構成**にしています。TTS は VOICEVOX（別アプリ）を
+> 使い、`llama-cpp-python` はビルド済みwheelを使うので、Visual Studio は要りません。
 
-```powershell
-# 1. リポジトリを取得
+### Windows の場合（コマンドプロンプト / PowerShell）
+
+```cmd
+:: 1. リポジトリを取得
 git clone https://github.com/tunachan0429/AI-talking.git
 cd AI-talking
 
-# 2. 仮想環境を作成
+:: 2. 仮想環境を作成して有効化
 python -m venv .venv
 .venv\Scripts\activate
 
-# 3. 基本パッケージをインストール
+:: 3. GPU版 PyTorch + torchaudio（RTX 2070 = CUDA対応）
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+:: 4. llama-cpp-python をビルド済みwheelで入れる（コンパイル不要）
+::    ↓は Python 3.10 用。3.11なら cp311、3.12なら cp312 に URL を変える
+pip install https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.4-cu121/llama_cpp_python-0.3.4-cp310-cp310-win_amd64.whl
+
+:: 5. 残りのライブラリ
 pip install -r requirements.txt
 
-# 4. GPU版 PyTorch を入れる（RTX 2070 = CUDA対応）
-pip install --force-reinstall torch --index-url https://download.pytorch.org/whl/cu121
-
-# 5. llama-cpp-python を GPU(CUDA)対応でビルド
-$env:CMAKE_ARGS="-DGGML_CUDA=on"
-pip install --force-reinstall --no-cache-dir llama-cpp-python
-
-# 6. LLMモデル（3B・約2GB）をダウンロード
+:: 6. LLMモデル（3B・約2GB）をダウンロード
 pip install huggingface_hub
-mkdir models\llm
 huggingface-cli download Qwen/Qwen2.5-3B-Instruct-GGUF qwen2.5-3b-instruct-q4_k_m.gguf --local-dir models\llm
 
-# 7. マイク・スピーカーの確認（必要なら config.yaml で番号指定）
+:: 7. VOICEVOX をインストールして起動（別アプリ）
+::    https://voicevox.hiroshiba.jp/ からDL → 起動しておく（裏で動いていればOK）
+
+:: 8. マイク・スピーカーの確認（必要なら config.yaml で番号指定）
 python run.py --list-devices
 
-# 8. 起動！話しかけてみてください（Ctrl+C で終了）
+:: 9. 起動！話しかけてみてください（Ctrl+C で終了）
 python run.py
 ```
 
@@ -217,17 +222,23 @@ sudo apt install portaudio19-dev            # マイク用ライブラリ
 git clone https://github.com/tunachan0429/AI-talking.git
 cd AI-talking
 python -m venv .venv && source .venv/bin/activate
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
+# Linux は最新のビルド済みwheelが使えます
+pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu121
 pip install -r requirements.txt
-pip install --force-reinstall torch --index-url https://download.pytorch.org/whl/cu121
-CMAKE_ARGS="-DGGML_CUDA=on" pip install --force-reinstall --no-cache-dir llama-cpp-python
 pip install huggingface_hub
-mkdir -p models/llm
 huggingface-cli download Qwen/Qwen2.5-3B-Instruct-GGUF qwen2.5-3b-instruct-q4_k_m.gguf --local-dir models/llm
+# VOICEVOX (Linux版/Docker) を起動: https://voicevox.hiroshiba.jp/
 python run.py
 ```
 
+### VOICEVOX について
+- 日本語の音声合成に **VOICEVOX**（無料・完全ローカル）を使います。先に**アプリを起動**しておいてください（起動していれば裏で待機でOK）。
+- 声を変えるには `config.yaml` の `tts.speaker` を変更（例: `2`=四国めたん, `8`=春日部つむぎ, `10`=雨晴はう）。
+- VOICEVOX を使わず Kokoro を使いたい場合は README 冒頭の Kokoro 手順を参照（Windowsでは pyopenjtalk のビルドにC++コンパイラが必要です）。
+
 ### 初回起動について
-- Whisper / Silero VAD / Kokoro のモデルは**初回だけ自動ダウンロード**されます（数分）。以降は完全オフラインで動きます。
+- Whisper / Silero VAD のモデルは**初回だけ自動ダウンロード**されます（数分）。以降はローカルで動きます。
 - 起動時に「モデルを読み込み中...」→「準備完了。話しかけてください。」と出れば成功です。
 
 ### VRAM が足りない/OOMエラーが出たら
