@@ -1,0 +1,99 @@
+:root {
+  --accent: #ff7eb6;
+  --bg: #14121a;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 30%, #241f33 0%, var(--bg) 70%);
+  font-family: "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  color: #fff;
+}
+
+#live2d-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
+
+/* ---- Start overlay ---- */
+#overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 8, 16, 0.92);
+  backdrop-filter: blur(4px);
+  transition: opacity 0.4s ease;
+}
+#overlay.hidden { opacity: 0; pointer-events: none; }
+
+.overlay-inner { text-align: center; }
+.overlay-inner h1 {
+  font-size: 2.4rem;
+  margin: 0 0 0.5rem;
+  letter-spacing: 0.08em;
+}
+#overlay-status { color: #c9c4d6; margin-bottom: 1.4rem; }
+
+#start-btn {
+  font-size: 1.15rem;
+  padding: 0.85rem 2.6rem;
+  border: none;
+  border-radius: 999px;
+  color: #1a1420;
+  background: var(--accent);
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform 0.1s ease, opacity 0.2s ease;
+}
+#start-btn:disabled { opacity: 0.5; cursor: default; }
+#start-btn:not(:disabled):hover { transform: translateY(-2px); }
+.hint { margin-top: 1.2rem; font-size: 0.85rem; color: #8f89a0; }
+
+/* ---- HUD ---- */
+#hud {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  pointer-events: none;
+}
+
+#state-badge {
+  padding: 0.35rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.state-idle    { color: #b8b2c8; }
+.state-listening { color: #7ee0ff; }
+.state-thinking  { color: #ffd97e; }
+.state-speaking  { color: var(--accent); }
+.state-loading   { color: #9a94ab; }
+.state-error     { color: #ff6b6b; }
+
+#subtitles {
+  max-width: min(720px, 92vw);
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+#user-line { color: #cfe9ff; font-size: 0.95rem; opacity: 0.85; min-height: 1.2em; }
+#assistant-line { color: #fff; font-size: 1.25rem; font-weight: 600; min-height: 1.4em; }

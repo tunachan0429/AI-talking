@@ -69,6 +69,23 @@ class TTSConfig:
 
 
 @dataclass
+class WebConfig:
+    host: str = "127.0.0.1"
+    port: int = 8000
+
+
+@dataclass
+class Live2DConfig:
+    # Path (served under /) to your model's .model3.json file.
+    model: str = "live2d/model.model3.json"
+    # The Live2D parameter that opens/closes the mouth (Cubism default).
+    mouth_param: str = "ParamMouthOpenY"
+    # Avatar height as a fraction of the screen height, and vertical position.
+    scale: float = 0.9
+    y_anchor: float = 0.5
+
+
+@dataclass
 class Config:
     device: str = "cpu"
     audio: AudioConfig = field(default_factory=AudioConfig)
@@ -76,6 +93,8 @@ class Config:
     stt: STTConfig = field(default_factory=STTConfig)
     llm: LLMConfig = field(default_factory=LLMConfig)
     tts: TTSConfig = field(default_factory=TTSConfig)
+    web: WebConfig = field(default_factory=WebConfig)
+    live2d: Live2DConfig = field(default_factory=Live2DConfig)
 
     @classmethod
     def load(cls, path: str = "config.yaml") -> "Config":
@@ -89,5 +108,7 @@ class Config:
             stt=STTConfig(**(raw.get("stt") or {})),
             llm=LLMConfig(**(raw.get("llm") or {})),
             tts=TTSConfig(**(raw.get("tts") or {})),
+            web=WebConfig(**(raw.get("web") or {})),
+            live2d=Live2DConfig(**(raw.get("live2d") or {})),
         )
         return cfg

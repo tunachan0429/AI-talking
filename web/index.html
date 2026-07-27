@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-talking — Live2D</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Live2D Cubism 4 core runtime. Copy live2dcubismcore.min.js from your
+       model package into web/live2d/ (it ships with the 八千代輝夜姫 files). -->
+  <script src="live2d/live2dcubismcore.min.js"></script>
+
+  <!-- PixiJS v6 + pixi-live2d-display (Cubism 4 build) from CDN.
+       Needs internet on first load; cached by the browser afterwards. -->
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/cubism4.min.js"></script>
+</head>
+<body>
+  <!-- Start overlay: a user gesture is required to enable audio playback. -->
+  <div id="overlay">
+    <div class="overlay-inner">
+      <h1>AI-talking</h1>
+      <p id="overlay-status">はじめるボタンを押してね</p>
+      <button id="start-btn" disabled>読み込み中...</button>
+      <p class="hint">※ VOICEVOX を起動しておいてください</p>
+    </div>
+  </div>
+
+  <canvas id="live2d-canvas"></canvas>
+
+  <!-- HUD: state badge + latest transcript -->
+  <div id="hud">
+    <div id="state-badge" class="state-idle">待機中</div>
+    <div id="subtitles">
+      <div id="user-line"></div>
+      <div id="assistant-line"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

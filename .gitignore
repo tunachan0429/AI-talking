@@ -17,3 +17,7 @@ models/
 *.wav
 *.log
 .DS_Store
+
+# Live2D model files are your own assets - copy them in locally, don't commit.
+web/live2d/*
+!web/live2d/README.md

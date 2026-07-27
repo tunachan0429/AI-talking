@@ -259,3 +259,59 @@ huggingface-cli download Qwen/Qwen2.5-7B-Instruct-GGUF qwen2.5-7b-instruct-q4_k_
 ```
 
 うまく動かない時はエラーメッセージを教えてください。一緒に直します。
+
+
+---
+
+## 🎭 Live2D アバター版（画面にキャラを表示して口パク）
+
+声だけの `run.py` に加えて、**ブラウザに Live2D キャラを表示して、話すと口が動く**版があります（`server.py`）。
+
+```
+ブラウザ（Live2D表示 + 音声再生 + 口パク）  ⇄  Python（VAD/STT/LLM/TTS）
+```
+
+### 準備
+
+1. **依存パッケージを追加**（声だけ版のセットアップ済みが前提）
+   ```cmd
+   pip install -r requirements.txt
+   ```
+   （`fastapi` と `uvicorn` が追加されます）
+
+2. **Live2D モデルを配置**
+   お手持ちのモデル一式を `web/live2d/` フォルダにコピーします。
+   `live2dcubismcore.min.js` も忘れずに入れてください（詳細は `web/live2d/README.md`）。
+
+3. **モデルの入口ファイルを指定**（`config.yaml`）
+   ```yaml
+   live2d:
+     model: live2d/八千代輝夜姫.model3.json   # あなたの .model3.json に合わせる
+     mouth_param: ParamMouthOpenY            # 口が動かない時はここを見直す
+     scale: 0.9                              # 画面の高さに対するキャラの大きさ
+     y_anchor: 0.5                           # 縦位置（0=上, 1=下）
+   ```
+
+### 起動
+
+VOICEVOX を起動した状態で：
+
+```cmd
+python server.py
+```
+
+そのあとブラウザで **http://127.0.0.1:8000** を開き、「はじめる」ボタンを押します。
+（音声再生を有効にするため、最初に一度クリックが必要です）
+
+- 初回はモデル読み込みで少し待ちます（`待機中` になれば準備完了）
+- マイクに話しかけて少し黙ると、キャラが**声で返事＆口パク**します
+- マイクは**PC側（server.py）**で拾うので、ブラウザは同じPCで開いてください
+
+### 口が動かない / うまく表示されない時
+
+- **口が動かない**: `mouth_param` がモデルと違う可能性。Live2Dモデルの口パラメータ名（例: `ParamMouthOpenY`, `PARAM_MOUTH_OPEN_Y`）に変更。
+- **キャラが出ない / 真っ黒**: `web/live2d/` にファイル一式（特に `live2dcubismcore.min.js` と `.model3.json`）が揃っているか確認。ブラウザの初回読み込みはネット接続が必要（PixiJS を取得）。
+- **大きすぎ/小さすぎ**: `scale` を調整（0.6〜1.2 くらい）。
+
+### 今後の拡張（任意）
+- **RVC 音声変換**（VOICEVOX の声を推し声に変換）: `LLM → VOICEVOX → RVC → 再生` の構成で追加可能。遅延とセットアップが増えるため別フェーズ推奨。

@@ -80,3 +80,22 @@ tts:
   # English female voices:  af_heart, af_bella, af_sarah
   voice: jf_alpha
   lang_code: j              # 'j' = Japanese, 'a' = American English
+
+
+# ---------------------------------------------------------------------
+# Web UI (Live2D avatar) - used by `python server.py`
+# ---------------------------------------------------------------------
+web:
+  host: 127.0.0.1
+  port: 8000
+
+# ---------------------------------------------------------------------
+# Live2D avatar (Cubism 4 / .moc3)
+#   Copy your model files into  web/live2d/  and point `model` at the
+#   .model3.json file (path is relative to the web/ folder).
+# ---------------------------------------------------------------------
+live2d:
+  model: live2d/八千代輝夜姫.model3.json
+  mouth_param: ParamMouthOpenY   # Cubism default mouth-open parameter
+  scale: 0.9                     # avatar height as a fraction of screen height
+  y_anchor: 0.5                  # vertical position (0=top ... 1=bottom)

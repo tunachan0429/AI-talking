@@ -15,7 +15,8 @@ from __future__ import annotations
 
 import re
 import threading
-from typing import Iterator
+import time
+from typing import Callable, Iterator, Optional
 
 import numpy as np
 from rich.console import Console
@@ -53,8 +54,23 @@ def _sentences(chunks: Iterator[str]) -> Iterator[str]:
 
 
 class Pipeline:
-    def __init__(self, cfg: Config):
+    def __init__(
+        self,
+        cfg: Config,
+        on_event: Optional[Callable[[dict], None]] = None,
+        on_speak: Optional[Callable[[np.ndarray, int], None]] = None,
+    ):
+        """Voice pipeline.
+
+        on_event: optional callback receiving state/transcript dicts (web mode),
+                  e.g. {"type": "state", "value": "speaking"}.
+        on_speak: optional callback receiving (audio, sample_rate). When set, the
+                  audio is delivered to this callback (e.g. streamed to a browser
+                  for playback + lip-sync) instead of being played locally.
+        """
         self.cfg = cfg
+        self._on_event = on_event
+        self._on_speak = on_speak
         self._speaking = threading.Event()
 
         console.print("[cyan]モデルを読み込み中...[/cyan]")
@@ -66,28 +82,53 @@ class Pipeline:
         console.print("  [green]LLM ready[/green] (llama.cpp)")
         self.tts = build_tts(cfg.tts, device=cfg.device)
         console.print(f"  [green]TTS ready[/green] ({cfg.tts.engine}: {cfg.tts.voice})")
-        self.player = Player(cfg.audio)
+        # Local speaker output is only used when no on_speak callback is given.
+        self.player = Player(cfg.audio) if on_speak is None else None
+        self._emit({"type": "state", "value": "idle"})
+        self._emit({"type": "name", "value": self._name()})
+
+    # ---- event helper -----------------------------------------------------
+    def _emit(self, event: dict) -> None:
+        if self._on_event is not None:
+            try:
+                self._on_event(event)
+            except Exception:  # never let UI errors break the loop
+                pass
 
     # ---- speaking ---------------------------------------------------------
     def _speak(self, text: str) -> None:
-        """Synthesize and play a reply, sentence by sentence."""
+        """Synthesize a reply and either stream it out or play it locally."""
         self._speaking.set()
+        self._emit({"type": "state", "value": "speaking"})
         try:
             for sentence in _sentences(iter([text])):
                 for audio in self.tts.stream(sentence):
-                    if audio.size:
-                        self.player.play(audio, sample_rate=self.tts.sample_rate)
+                    if not audio.size:
+                        continue
+                    sr = self.tts.sample_rate
+                    if self._on_speak is not None:
+                        # Hand audio to the UI (browser plays + lip-syncs). Block
+                        # for the clip's duration to keep the echo guard active.
+                        self._on_speak(audio, sr)
+                        time.sleep(len(audio) / float(sr))
+                    else:
+                        self.player.play(audio, sample_rate=sr)
         finally:
             self._speaking.clear()
+            self._emit({"type": "state", "value": "idle"})
 
     def _handle_utterance(self, utterance: np.ndarray) -> None:
+        self._emit({"type": "state", "value": "thinking"})
         text = self.stt.transcribe(utterance)
         if not text:
+            self._emit({"type": "state", "value": "idle"})
             return
         console.print(f"[bold white]あなた:[/bold white] {text}")
+        self._emit({"type": "user", "text": text})
 
         reply = self.llm.reply(text)
         console.print(f"[bold magenta]{self._name()}:[/bold magenta] {reply}")
+        self._emit({"type": "assistant", "text": reply})
         self._speak(reply)
 
     def _name(self) -> str:
@@ -117,5 +158,6 @@ class Pipeline:
                     # Drop any audio captured during generation/playback.
                     mic.drain()
             except KeyboardInterrupt:
-                self.player.stop()
+                if self.player is not None:
+                    self.player.stop()
                 console.print("\n[yellow]またね。[/yellow]")

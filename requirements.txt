@@ -23,6 +23,10 @@ requests>=2.31
 # C++ compiler to build pyopenjtalk):
 #   pip install kokoro>=0.9.2 "misaki[ja]>=0.9.3"
 
+# === Web UI (Live2D avatar) - used by server.py ===
+fastapi>=0.110
+uvicorn[standard]>=0.29  # ASGI server incl. websockets support
+
 # === Utilities ===
 pyyaml>=6.0
 rich>=13.0               # pretty console output
