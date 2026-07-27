@@ -82,6 +82,13 @@ class Pipeline:
         console.print("  [green]LLM ready[/green] (llama.cpp)")
         self.tts = build_tts(cfg.tts, device=cfg.device)
         console.print(f"  [green]TTS ready[/green] ({cfg.tts.engine}: {cfg.tts.voice})")
+        # Optional RVC voice conversion (separate local server).
+        self.vc = None
+        if getattr(cfg, "rvc", None) is not None and cfg.rvc.enabled:
+            from .vc.rvc import RVCClient
+
+            self.vc = RVCClient(cfg.rvc, device=cfg.device)
+            console.print(f"  [green]RVC ready[/green] ({cfg.rvc.base_url})")
         # Local speaker output is only used when no on_speak callback is given.
         self.player = Player(cfg.audio) if on_speak is None else None
         self._emit({"type": "state", "value": "idle"})
@@ -106,6 +113,12 @@ class Pipeline:
                     if not audio.size:
                         continue
                     sr = self.tts.sample_rate
+                    # Optional: convert the voice timbre with RVC.
+                    if self.vc is not None:
+                        try:
+                            audio, sr = self.vc.convert(audio, sr)
+                        except Exception as exc:  # keep talking even if RVC fails
+                            console.print(f"[red]RVC変換エラー: {exc}[/red]")
                     if self._on_speak is not None:
                         # Hand audio to the UI (browser plays + lip-syncs). Block
                         # for the clip's duration to keep the echo guard active.

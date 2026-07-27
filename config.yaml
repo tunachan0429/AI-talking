@@ -83,6 +83,15 @@ tts:
 
 
 # ---------------------------------------------------------------------
+# RVC voice conversion (optional). Converts the VOICEVOX voice into your
+# trained RVC voice. Runs as a SEPARATE local server (see README):
+#     python -m rvc_python api -p 5050 -pm path/to/your_model.pth
+# ---------------------------------------------------------------------
+rvc:
+  enabled: false                 # set true after the RVC server is running
+  base_url: http://127.0.0.1:5050
+
+# ---------------------------------------------------------------------
 # Web UI (Live2D avatar) - used by `python server.py`
 # ---------------------------------------------------------------------
 web:

@@ -69,6 +69,18 @@ class TTSConfig:
 
 
 @dataclass
+class RVCConfig:
+    """Optional RVC voice conversion (runs as a separate local API server).
+
+    Pipeline becomes:  LLM -> VOICEVOX -> RVC (convert timbre) -> playback.
+    Start the server separately (see README), e.g.:
+        python -m rvc_python api -p 5050 -pm path/to/your_model.pth
+    """
+    enabled: bool = False
+    base_url: str = "http://127.0.0.1:5050"
+
+
+@dataclass
 class WebConfig:
     host: str = "127.0.0.1"
     port: int = 8000
@@ -110,6 +122,7 @@ class Config:
     stt: STTConfig = field(default_factory=STTConfig)
     llm: LLMConfig = field(default_factory=LLMConfig)
     tts: TTSConfig = field(default_factory=TTSConfig)
+    rvc: RVCConfig = field(default_factory=RVCConfig)
     web: WebConfig = field(default_factory=WebConfig)
     live2d: Live2DConfig = field(default_factory=Live2DConfig)
     overlay: OverlayConfig = field(default_factory=OverlayConfig)
@@ -126,6 +139,7 @@ class Config:
             stt=STTConfig(**(raw.get("stt") or {})),
             llm=LLMConfig(**(raw.get("llm") or {})),
             tts=TTSConfig(**(raw.get("tts") or {})),
+            rvc=RVCConfig(**(raw.get("rvc") or {})),
             web=WebConfig(**(raw.get("web") or {})),
             live2d=Live2DConfig(**(raw.get("live2d") or {})),
             overlay=OverlayConfig(**(raw.get("overlay") or {})),

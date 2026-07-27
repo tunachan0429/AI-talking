@@ -315,3 +315,53 @@ python server.py
 
 ### 今後の拡張（任意）
 - **RVC 音声変換**（VOICEVOX の声を推し声に変換）: `LLM → VOICEVOX → RVC → 再生` の構成で追加可能。遅延とセットアップが増えるため別フェーズ推奨。
+
+
+---
+
+## 🎚️ RVC 音声変換（任意）— VOICEVOXの声を"推しの声"に
+
+RVC を有効にすると、パイプラインが `LLM → VOICEVOX → RVC → 再生` になり、
+VOICEVOX の声をあなたの学習済み RVC モデルの声質に変換します。
+
+> RVC の依存は Windows で壊れやすいので、**RVC は別サーバーとして起動**し、
+> このアプリは HTTP で変換を依頼します（VOICEVOX と同じ考え方）。
+
+### 1. RVC サーバーを別 venv で用意（推奨 Python 3.10）
+
+```cmd
+py -3.10 -m venv rvc-venv
+rvc-venv\Scripts\activate
+pip install rvc-python
+:: GPU版torch（RTX 2070）に入れ替え
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
+```
+
+### 2. 学習済みモデルを用意して API サーバー起動
+
+`.pth`（と、あれば `.index`）を用意して：
+
+```cmd
+python -m rvc_python api -p 5050 -pm path\to\your_model.pth
+```
+
+ピッチや index_rate 等を変えたい場合は、`/params` エンドポイント、または
+起動後に本家 README のパラメータ（`f0up_key`, `index_rate`, `protect` など）で調整します。
+
+### 3. このアプリ側で有効化（`config.yaml`）
+
+```yaml
+rvc:
+  enabled: true
+  base_url: http://127.0.0.1:5050
+```
+
+あとは通常どおり `python run.py`（声だけ）または `python server.py`（Live2D）を起動。
+起動時に `RVC ready (http://127.0.0.1:5050)` と出れば接続OK。話すと変換後の声で返事します。
+
+### メモ
+- RVC サーバーが起動していないと、起動時に接続エラーの案内が出ます（その場合は
+  サーバーを起動するか、`rvc.enabled: false` に戻してください）。
+- 変換の分だけ返事が少し遅くなります（1発話あたり数百ミリ秒〜）。
+- VRAM: VOICEVOX(GPU) + RVC + Whisper + LLM を同時に載せると 8GB では厳しいことも。
+  その場合は VOICEVOX か RVC のどちらかを CPU で動かすと安定します。
