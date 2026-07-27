@@ -41,7 +41,9 @@ stt:
 # LLM - local chat model via llama.cpp (GGUF)
 # ---------------------------------------------------------------------
 llm:
-  model_path: models/llm/model.gguf   # path to your downloaded GGUF file
+  # RTX 2070 (8GB VRAM): a 3B Q4 model fits comfortably alongside the other
+  # models. For 7B, see the README (may need n_gpu_layers < all).
+  model_path: models/llm/qwen2.5-3b-instruct-q4_k_m.gguf
   n_ctx: 4096
   n_gpu_layers: -1          # -1 = offload all layers to GPU; 0 = CPU only
   max_tokens: 200

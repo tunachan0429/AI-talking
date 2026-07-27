@@ -164,3 +164,87 @@ hear herself. When she finishes, she listens again.
 
 - 100% offline after the one-time model downloads. Safe to run with networking disabled.
 - Everything is local; no data leaves your machine.
+
+
+---
+
+## 🇯🇵 RTX 2070（VRAM 8GB）向け かんたんスタート手順
+
+RTX 2070 でも問題なく動きます。VRAM が 8GB なので、**LLM は 3B モデル**を使うのがおすすめです（4つのモデル全部載せても余裕があります）。
+
+### 前提
+- NVIDIA ドライバがインストール済み
+- Python 3.10〜3.12
+- Git
+
+### Windows の場合
+
+```powershell
+# 1. リポジトリを取得
+git clone https://github.com/tunachan0429/AI-talking.git
+cd AI-talking
+
+# 2. 仮想環境を作成
+python -m venv .venv
+.venv\Scripts\activate
+
+# 3. 基本パッケージをインストール
+pip install -r requirements.txt
+
+# 4. GPU版 PyTorch を入れる（RTX 2070 = CUDA対応）
+pip install --force-reinstall torch --index-url https://download.pytorch.org/whl/cu121
+
+# 5. llama-cpp-python を GPU(CUDA)対応でビルド
+$env:CMAKE_ARGS="-DGGML_CUDA=on"
+pip install --force-reinstall --no-cache-dir llama-cpp-python
+
+# 6. LLMモデル（3B・約2GB）をダウンロード
+pip install huggingface_hub
+mkdir models\llm
+huggingface-cli download Qwen/Qwen2.5-3B-Instruct-GGUF qwen2.5-3b-instruct-q4_k_m.gguf --local-dir models\llm
+
+# 7. マイク・スピーカーの確認（必要なら config.yaml で番号指定）
+python run.py --list-devices
+
+# 8. 起動！話しかけてみてください（Ctrl+C で終了）
+python run.py
+```
+
+### Linux の場合
+
+```bash
+sudo apt install portaudio19-dev            # マイク用ライブラリ
+git clone https://github.com/tunachan0429/AI-talking.git
+cd AI-talking
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+pip install --force-reinstall torch --index-url https://download.pytorch.org/whl/cu121
+CMAKE_ARGS="-DGGML_CUDA=on" pip install --force-reinstall --no-cache-dir llama-cpp-python
+pip install huggingface_hub
+mkdir -p models/llm
+huggingface-cli download Qwen/Qwen2.5-3B-Instruct-GGUF qwen2.5-3b-instruct-q4_k_m.gguf --local-dir models/llm
+python run.py
+```
+
+### 初回起動について
+- Whisper / Silero VAD / Kokoro のモデルは**初回だけ自動ダウンロード**されます（数分）。以降は完全オフラインで動きます。
+- 起動時に「モデルを読み込み中...」→「準備完了。話しかけてください。」と出れば成功です。
+
+### VRAM が足りない/OOMエラーが出たら
+- `config.yaml` の `stt.model` を `base` に下げる
+- `llm.n_ctx` を `2048` に下げる
+
+### もっと賢くしたい（7Bを使いたい）場合
+7B（約4.7GB）も 8GB に載りますが、他のモデルと合わせるとギリギリです。試すなら:
+```yaml
+llm:
+  model_path: models/llm/qwen2.5-7b-instruct-q4_k_m.gguf
+  n_gpu_layers: 28          # 全部(-1)だとOOMのことがあるので一部だけGPUに
+  n_ctx: 2048
+```
+でダウンロードは:
+```bash
+huggingface-cli download Qwen/Qwen2.5-7B-Instruct-GGUF qwen2.5-7b-instruct-q4_k_m.gguf --local-dir models/llm
+```
+
+うまく動かない時はエラーメッセージを教えてください。一緒に直します。
