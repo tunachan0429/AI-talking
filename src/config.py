@@ -81,8 +81,8 @@ class Live2DConfig:
     # The Live2D parameter that opens/closes the mouth (Cubism default).
     mouth_param: str = "ParamMouthOpenY"
     # zoom = full model height as a multiple of screen height (bigger = larger).
-    # ~2.3 gives a big VTuber "bust-up" view; ~0.9 shows the whole body.
-    scale: float = 2.3
+    # ~3.0 gives a large close-up bust view; ~0.9 shows the whole body.
+    scale: float = 3.0
     # y_anchor = where the top of the head sits (0 = very top of screen).
     y_anchor: float = 0.02
     # x_anchor = horizontal position (0=left ... 1=right). ~0.68 fills the
