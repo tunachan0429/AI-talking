@@ -1,9 +1,9 @@
-/* AI-talking — Live2D front-end
+/* AI-talking — Live2D front-end (PixiJS v7 + pixi-live2d-display-lipsyncpatch)
  *
- * - Loads a Cubism 4 Live2D model with pixi-live2d-display.
+ * - Loads a Cubism 4 Live2D model.
  * - Connects to the Python backend over WebSocket.
- * - Plays TTS audio (sent as base64 WAV) via the Web Audio API and drives the
- *   model's mouth parameter from the live audio level (lip-sync).
+ * - Plays TTS audio (base64 WAV) using the plugin's built-in `model.speak`,
+ *   which also drives the mouth (lip-sync) automatically.
  */
 
 "use strict";
@@ -30,16 +30,10 @@ const STATE_TEXT = {
 
 let app = null;
 let model = null;
-let mouthParam = "ParamMouthOpenY";
-let mouth = 0; // smoothed 0..1
 
-// ---- audio / lip-sync ----------------------------------------------------
-let audioCtx = null;
-let analyser = null;
-let timeData = null;
-let isSpeaking = false;
+// audio queue (played sequentially via model.speak)
 const audioQueue = [];
-let playing = false;
+let speaking = false;
 
 // Surface any JS error on screen (so you don't need to open DevTools).
 window.addEventListener("error", (e) => {
@@ -63,7 +57,6 @@ async function initLive2D() {
   }
 
   const cfg = await (await fetch("/api/config")).json();
-  mouthParam = cfg.mouthParam || "ParamMouthOpenY";
   const heightFraction = cfg.scale || 0.9;
   const yAnchor = cfg.yAnchor != null ? cfg.yAnchor : 0.5;
 
@@ -76,85 +69,49 @@ async function initLive2D() {
   });
 
   const url = encodeURI(cfg.model);
-  // Let the plugin auto-update the model on the shared ticker (the reliable,
-  // documented default). We only override the mouth parameter afterwards.
-  model = await PIXI.live2d.Live2DModel.from(url);
+  model = await PIXI.live2d.Live2DModel.from(url); // auto-updates via window.PIXI
   app.stage.addChild(model);
   try { model.anchor.set(0.5, 0.5); } catch (e) { /* older API */ }
 
   const layout = () => {
     if (!model) return;
-    // Measure the model's native height at scale 1, then fit it to the screen.
     model.scale.set(1);
     const im = model.internalModel || {};
     const baseH = model.height || im.originalHeight || 1000;
     let fit = (window.innerHeight * heightFraction) / baseH;
-    if (!isFinite(fit) || fit <= 0) fit = 0.2; // safety fallback
+    if (!isFinite(fit) || fit <= 0) fit = 0.2;
     model.scale.set(fit);
     model.position.set(window.innerWidth / 2, window.innerHeight * yAnchor);
   };
   layout();
   window.addEventListener("resize", layout);
   console.log("[live2d] loaded", { model: url, baseHeight: model.height });
-
-  // Drive the mouth from the live audio level (runs each frame).
-  app.ticker.add(() => {
-    if (!model) return;
-    let target = 0;
-    if (isSpeaking && analyser) {
-      analyser.getFloatTimeDomainData(timeData);
-      let sum = 0;
-      for (let i = 0; i < timeData.length; i++) sum += timeData[i] * timeData[i];
-      const rms = Math.sqrt(sum / timeData.length);
-      target = Math.min(1, rms * 6.0); // gain
-    }
-    mouth += (target - mouth) * 0.35; // smoothing
-    try {
-      model.internalModel.coreModel.setParameterValueById(mouthParam, mouth);
-    } catch (e) {
-      /* param name mismatch — ignore */
-    }
-  });
 }
 
-// ---- audio playback + lip-sync ------------------------------------------
-function base64ToArrayBuffer(b64) {
-  const bin = atob(b64);
-  const len = bin.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes.buffer;
-}
-
+// ---- audio playback + lip-sync (built into the plugin) -------------------
 function enqueueAudio(b64) {
   audioQueue.push(b64);
-  if (!playing) playNext();
+  if (!speaking) playNext();
 }
 
-async function playNext() {
+function playNext() {
   if (audioQueue.length === 0) {
-    playing = false;
-    isSpeaking = false;
+    speaking = false;
     return;
   }
-  playing = true;
+  speaking = true;
   const b64 = audioQueue.shift();
-
-  let buffer;
+  const dataUrl = "data:audio/wav;base64," + b64;
   try {
-    buffer = await audioCtx.decodeAudioData(base64ToArrayBuffer(b64));
+    // model.speak plays the audio AND lip-syncs the mouth automatically.
+    model.speak(dataUrl, {
+      volume: 1.0,
+      onFinish: () => playNext(),
+      onError: () => playNext(),
+    });
   } catch (e) {
-    return playNext();
+    playNext();
   }
-
-  const source = audioCtx.createBufferSource();
-  source.buffer = buffer;
-  source.connect(analyser);
-  analyser.connect(audioCtx.destination);
-
-  isSpeaking = true;
-  source.onended = () => playNext();
-  source.start();
 }
 
 // ---- WebSocket -----------------------------------------------------------
@@ -163,7 +120,6 @@ function connect() {
   const ws = new WebSocket(`${proto}://${location.host}/ws`);
 
   ws.onopen = () => {
-    // keepalive
     setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) ws.send("ping");
     }, 15000);
@@ -214,12 +170,11 @@ async function boot() {
 }
 
 els.startBtn.addEventListener("click", () => {
-  // A user gesture is required to unlock audio playback in the browser.
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  analyser = audioCtx.createAnalyser();
-  analyser.fftSize = 1024;
-  timeData = new Float32Array(analyser.fftSize);
-  if (audioCtx.state === "suspended") audioCtx.resume();
+  // A user gesture unlocks browser audio playback.
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === "suspended") ctx.resume();
+  } catch (e) { /* ignore */ }
 
   els.overlay.classList.add("hidden");
   connect();

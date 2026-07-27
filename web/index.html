@@ -10,11 +10,11 @@
        model package into web/live2d/ (it ships with the 八千代輝夜姫 files). -->
   <script src="live2d/live2dcubismcore.min.js"></script>
 
-  <!-- PixiJS v6 + pixi-live2d-display (Cubism 4 build) from CDN.
-       Needs internet on first load; cached by the browser afterwards.
-       crossorigin lets the browser show real error messages (not "Script error"). -->
-  <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js"></script>
-  <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/cubism4.min.js"></script>
+  <!-- PixiJS v7 + pixi-live2d-display-lipsyncpatch (Cubism 4 build) from CDN.
+       This fork supports modern VTube Studio models and has built-in lip-sync.
+       Needs internet on first load; cached by the browser afterwards. -->
+  <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
+  <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/pixi-live2d-display-lipsyncpatch@0.5.0-ls-8/dist/cubism4.min.js"></script>
 </head>
 <body>
   <!-- Start overlay: a user gesture is required to enable audio playback. -->
