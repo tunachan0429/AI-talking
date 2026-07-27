@@ -73,12 +73,18 @@ async function initLive2D() {
 
   const layout = () => {
     if (!model) return;
-    const fit = (window.innerHeight * heightFraction) / model.internalModel.originalHeight;
+    // Measure the model's native height at scale 1, then fit it to the screen.
+    model.scale.set(1);
+    const im = model.internalModel || {};
+    const baseH = model.height || im.originalHeight || 1000;
+    let fit = (window.innerHeight * heightFraction) / baseH;
+    if (!isFinite(fit) || fit <= 0) fit = 0.2; // safety fallback
     model.scale.set(fit);
     model.position.set(window.innerWidth / 2, window.innerHeight * yAnchor);
   };
   layout();
   window.addEventListener("resize", layout);
+  console.log("[live2d] loaded", { model: url, baseHeight: model.height });
 
   // Deterministic update: advance the model, then override the mouth, then
   // PixiJS renders the frame.
