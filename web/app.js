@@ -62,8 +62,10 @@ async function initLive2D() {
     "PIXI " + (PIXI.VERSION || "?") + " / core:" + (coreOk ? "ok" : "NG");
 
   const cfg = await (await fetch("/api/config")).json();
-  const heightFraction = cfg.scale || 0.9;
-  const yAnchor = cfg.yAnchor != null ? cfg.yAnchor : 0.5;
+  // zoom = how many screen-heights tall the full model is (bigger = larger).
+  const zoom = cfg.scale || 1.8;
+  // topFrac = where the top of the head sits (0 = very top of screen).
+  const topFrac = cfg.yAnchor != null ? cfg.yAnchor : 0.05;
 
   app = new PIXI.Application({
     view: els.canvas,
@@ -82,17 +84,19 @@ async function initLive2D() {
     },
   });
   app.stage.addChild(model);
-  try { model.anchor.set(0.5, 0.5); } catch (e) { /* older API */ }
 
   const layout = () => {
     if (!model) return;
+    // Top-center anchor -> VTuber "bust-up" framing: head near the top,
+    // lower body extends off the bottom of the screen.
+    try { model.anchor.set(0.5, 0.0); } catch (e) { /* older API */ }
     model.scale.set(1);
     const im = model.internalModel || {};
     const baseH = model.height || im.originalHeight || 1000;
-    let fit = (window.innerHeight * heightFraction) / baseH;
-    if (!isFinite(fit) || fit <= 0) fit = 0.2;
+    let fit = (window.innerHeight * zoom) / baseH;
+    if (!isFinite(fit) || fit <= 0) fit = 0.5;
     model.scale.set(fit);
-    model.position.set(window.innerWidth / 2, window.innerHeight * yAnchor);
+    model.position.set(window.innerWidth / 2, window.innerHeight * topFrac);
   };
   layout();
   window.addEventListener("resize", layout);

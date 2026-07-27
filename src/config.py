@@ -80,9 +80,11 @@ class Live2DConfig:
     model: str = "live2d/model.model3.json"
     # The Live2D parameter that opens/closes the mouth (Cubism default).
     mouth_param: str = "ParamMouthOpenY"
-    # Avatar height as a fraction of the screen height, and vertical position.
-    scale: float = 0.9
-    y_anchor: float = 0.5
+    # zoom = full model height as a multiple of screen height (bigger = larger).
+    # ~1.8 gives a VTuber "bust-up" view; ~0.9 shows the whole body.
+    scale: float = 1.8
+    # y_anchor = where the top of the head sits (0 = very top of screen).
+    y_anchor: float = 0.05
 
 
 @dataclass

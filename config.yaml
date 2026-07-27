@@ -97,5 +97,6 @@ web:
 live2d:
   model: live2d/八千代輝夜姫.model3.json
   mouth_param: ParamMouthOpenY   # Cubism default mouth-open parameter
-  scale: 0.9                     # avatar height as a fraction of screen height
-  y_anchor: 0.5                  # vertical position (0=top ... 1=bottom)
+  scale: 1.8                     # zoom: full-body height ÷ screen height.
+                                 #   ~1.8 = VTuber bust-up, ~0.9 = whole body
+  y_anchor: 0.05                 # top of the head position (0=very top, bigger=下)
