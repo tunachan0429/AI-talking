@@ -122,6 +122,75 @@ function hideBubble() {
   els.speechBubble.classList.add("hidden");
 }
 
+// ===== idle motion (keeps the avatar lively, not a fixed loop) ============
+const idle = {
+  t0: performance.now(),
+  gaze: { x: 0, y: 0 },
+  gazeTarget: { x: 0, y: 0 },
+  nextGaze: 0,
+  mood: 0,
+  moodTarget: 0,
+  nextMood: 0,
+  lean: 0,
+  leanTarget: 0,
+  nextLean: 0,
+};
+
+function setParam(core, id, v) {
+  try { core.setParameterValueById(id, v); } catch (e) { /* param absent */ }
+}
+
+// Called right before the model renders (in 'afterMotionUpdate'), so our
+// values win over the default idle pose. Combines several out-of-phase sines
+// with slow random-walk targets, so the motion never repeats exactly.
+function animateIdle() {
+  const core = model && model.internalModel && model.internalModel.coreModel;
+  if (!core) return;
+  const now = performance.now();
+  const t = (now - idle.t0) / 1000;
+
+  if (now > idle.nextGaze) {
+    idle.gazeTarget.x = Math.random() * 2 - 1;
+    idle.gazeTarget.y = Math.random() * 2 - 1;
+    idle.nextGaze = now + 1400 + Math.random() * 3200;
+  }
+  if (now > idle.nextMood) {
+    idle.moodTarget = Math.random() * 2 - 1;
+    idle.nextMood = now + 5000 + Math.random() * 6000;
+  }
+  if (now > idle.nextLean) {
+    idle.leanTarget = Math.random() * 2 - 1;
+    idle.nextLean = now + 6000 + Math.random() * 7000;
+  }
+  idle.gaze.x += (idle.gazeTarget.x - idle.gaze.x) * 0.02;
+  idle.gaze.y += (idle.gazeTarget.y - idle.gaze.y) * 0.02;
+  idle.mood += (idle.moodTarget - idle.mood) * 0.01;
+  idle.lean += (idle.leanTarget - idle.lean) * 0.01;
+
+  // head
+  setParam(core, "ParamAngleX", 9 * Math.sin(t * 0.5) + idle.gaze.x * 20 + idle.lean * 6);
+  setParam(core, "ParamAngleY", 7 * Math.sin(t * 0.43) + idle.gaze.y * 12 + idle.mood * 4);
+  setParam(core, "ParamAngleZ", 5 * Math.sin(t * 0.31) + idle.lean * 10);
+  // eyes follow the gaze
+  setParam(core, "ParamEyeBallX", idle.gaze.x);
+  setParam(core, "ParamEyeBallY", idle.gaze.y);
+  // body sway
+  setParam(core, "ParamBodyAngleX", 5 * Math.sin(t * 0.3) + idle.gaze.x * 8);
+  setParam(core, "ParamBodyAngleY", 3 * Math.sin(t * 0.24));
+  setParam(core, "ParamBodyAngleZ", 4 * Math.sin(t * 0.27) + idle.lean * 4);
+  // breathing
+  setParam(core, "ParamBreath", 0.5 + 0.5 * Math.sin(t * 0.9));
+}
+
+// Occasionally change facial expression for extra variety.
+function scheduleExpression() {
+  const delay = 9000 + Math.random() * 9000;
+  setTimeout(() => {
+    try { if (model && model.expression) model.expression(); } catch (e) { /* none */ }
+    scheduleExpression();
+  }, delay);
+}
+
 // ===== Live2D =============================================================
 async function initLive2D() {
   if (!window.PIXI || !PIXI.live2d || !PIXI.live2d.Live2DModel) {
@@ -168,6 +237,20 @@ async function initLive2D() {
   };
   layout();
   window.addEventListener("resize", layout);
+
+  // Inject our idle motion right before each render so it isn't overwritten
+  // by the model's default pose, and start random expression changes.
+  try {
+    if (model.internalModel && model.internalModel.on) {
+      model.internalModel.on("afterMotionUpdate", animateIdle);
+    } else {
+      app.ticker.add(animateIdle); // fallback
+    }
+  } catch (e) {
+    app.ticker.add(animateIdle);
+  }
+  scheduleExpression();
+
   console.log("[live2d] loaded", { model: url, baseHeight: model.height });
 }
 
