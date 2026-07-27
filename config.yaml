@@ -1,0 +1,67 @@
+# =====================================================================
+#  Local AI Girlfriend - configuration
+#  Everything runs locally. No internet, no API keys required at runtime.
+# =====================================================================
+
+# Device used by torch / whisper / llama.
+#   "cuda"  -> NVIDIA GPU (recommended, ~15GB VRAM fits all models)
+#   "cpu"   -> works everywhere but slower
+#   "auto"  -> use cuda if available, else cpu
+device: auto
+
+# ---------------------------------------------------------------------
+# Audio I/O
+# ---------------------------------------------------------------------
+audio:
+  sample_rate: 16000        # capture rate (Whisper & Silero want 16k)
+  block_ms: 32              # microphone block size in milliseconds
+  input_device: null        # null = system default mic (int index or name)
+  output_device: null       # null = system default speaker
+  output_sample_rate: 24000 # Kokoro outputs 24k audio
+
+# ---------------------------------------------------------------------
+# VAD - Voice Activity Detection (Silero VAD v5)
+# ---------------------------------------------------------------------
+vad:
+  threshold: 0.5            # speech probability threshold (0-1)
+  min_speech_ms: 250        # ignore blips shorter than this
+  min_silence_ms: 700       # silence this long => end of an utterance
+  speech_pad_ms: 200        # padding kept around detected speech
+
+# ---------------------------------------------------------------------
+# STT - Speech To Text (faster-whisper)
+# ---------------------------------------------------------------------
+stt:
+  model: small              # tiny | base | small | medium | large-v3
+  language: ja              # forced language; null = auto-detect
+  compute_type: auto        # auto | float16 | int8_float16 | int8
+  beam_size: 1
+
+# ---------------------------------------------------------------------
+# LLM - local chat model via llama.cpp (GGUF)
+# ---------------------------------------------------------------------
+llm:
+  model_path: models/llm/model.gguf   # path to your downloaded GGUF file
+  n_ctx: 4096
+  n_gpu_layers: -1          # -1 = offload all layers to GPU; 0 = CPU only
+  max_tokens: 200
+  temperature: 0.8
+  top_p: 0.9
+  history_turns: 12         # how many past turns to keep in context
+  # The persona of your assistant. Edit freely.
+  system_prompt: |
+    あなたは「ユキ」という名前の、優しくて少し甘えん坊な女の子です。
+    ユーザーの恋人として、親しみを込めた自然な口調で話します。
+    返事は短め（1〜3文）で、話し言葉らしく、絵文字や記号は使いません。
+    音声で読み上げられるので、箇条書きやコードは避け、自然な会話文で答えてください。
+
+# ---------------------------------------------------------------------
+# TTS - Text To Speech (Kokoro, female voice)
+# ---------------------------------------------------------------------
+tts:
+  engine: kokoro
+  # Japanese female voices: jf_alpha, jf_gongitsune, jf_nezumi, jf_tebukuro
+  # English female voices:  af_heart, af_bella, af_sarah
+  voice: jf_alpha
+  lang_code: j              # 'j' = Japanese, 'a' = American English
+  speed: 1.0

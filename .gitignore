@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Models (large binaries - download separately, see README)
+models/
+*.gguf
+*.bin
+*.pt
+*.onnx
+
+# Audio scratch / logs
+*.wav
+*.log
+.DS_Store
