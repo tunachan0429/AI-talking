@@ -141,6 +141,15 @@ async def api_config() -> JSONResponse:
             "mouthParam": CFG.live2d.mouth_param,
             "scale": CFG.live2d.scale,
             "yAnchor": CFG.live2d.y_anchor,
+            "xAnchor": CFG.live2d.x_anchor,
+            "overlay": {
+                "title": CFG.overlay.title,
+                "subtitle": CFG.overlay.subtitle,
+                "hashtag": CFG.overlay.hashtag,
+                "handle": CFG.overlay.handle,
+                "liveLabel": CFG.overlay.live_label,
+                "commentsTitle": CFG.overlay.comments_title,
+            },
         }
     )
 

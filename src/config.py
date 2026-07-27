@@ -85,6 +85,20 @@ class Live2DConfig:
     scale: float = 1.8
     # y_anchor = where the top of the head sits (0 = very top of screen).
     y_anchor: float = 0.05
+    # x_anchor = horizontal position (0=left ... 1=right). 0.72 keeps the
+    # avatar on the right so it doesn't cover the comments panel.
+    x_anchor: float = 0.72
+
+
+@dataclass
+class OverlayConfig:
+    """Stream-overlay (VTuber) look & text."""
+    title: str = "AI LIVE"           # small title on the stream
+    subtitle: str = "おしゃべり配信中"    # under the title
+    hashtag: str = "ai_talking_live"  # decorative # tag (bottom-left)
+    handle: str = "my_ai_girlfriend"  # decorative @ handle (bottom-left)
+    live_label: str = "NOW LIVE"      # the pulsing badge text
+    comments_title: str = "COMMENTS"  # header of the comments panel
 
 
 @dataclass
@@ -97,6 +111,7 @@ class Config:
     tts: TTSConfig = field(default_factory=TTSConfig)
     web: WebConfig = field(default_factory=WebConfig)
     live2d: Live2DConfig = field(default_factory=Live2DConfig)
+    overlay: OverlayConfig = field(default_factory=OverlayConfig)
 
     @classmethod
     def load(cls, path: str = "config.yaml") -> "Config":
@@ -112,5 +127,6 @@ class Config:
             tts=TTSConfig(**(raw.get("tts") or {})),
             web=WebConfig(**(raw.get("web") or {})),
             live2d=Live2DConfig(**(raw.get("live2d") or {})),
+            overlay=OverlayConfig(**(raw.get("overlay") or {})),
         )
         return cfg

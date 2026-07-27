@@ -4,37 +4,66 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI-talking — Live2D</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Live2D Cubism core runtime (official latest, supports all moc3 versions).
-       Falls back to your local copy in web/live2d/ if offline. -->
+  <!-- Live2D Cubism core runtime (official latest, supports all moc3 versions). -->
   <script crossorigin="anonymous" src="https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js"></script>
-
-  <!-- PixiJS v7 + pixi-live2d-display-lipsyncpatch (Cubism 4 build) from CDN.
-       This fork supports modern VTube Studio models and has built-in lip-sync.
-       Needs internet on first load; cached by the browser afterwards. -->
+  <!-- PixiJS v7 + pixi-live2d-display-lipsyncpatch (Cubism 4) from CDN. -->
   <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
   <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/pixi-live2d-display-lipsyncpatch@0.5.0-ls-8/dist/cubism4.min.js"></script>
 </head>
 <body>
-  <!-- Start overlay: a user gesture is required to enable audio playback. -->
-  <div id="overlay">
-    <div class="overlay-inner">
-      <h1>AI-talking</h1>
-      <p id="overlay-status">はじめるボタンを押してね</p>
-      <button id="start-btn" disabled>読み込み中...</button>
-      <p class="hint">※ VOICEVOX を起動しておいてください</p>
-    </div>
-  </div>
+  <!-- ===== background layers ===== -->
+  <div id="bg-gradient"></div>
+  <div id="bg-dots"></div>
+  <div id="bg-stars"></div>       <!-- twinkling stars (generated in JS) -->
+  <div id="bg-sparkles"></div>    <!-- floating + / x marks (generated in JS) -->
+  <div id="bg-cloud"></div>       <!-- soft cloud along the bottom -->
 
+  <!-- ===== Live2D avatar ===== -->
   <canvas id="live2d-canvas"></canvas>
 
-  <!-- HUD: state badge + latest transcript -->
-  <div id="hud">
-    <div id="state-badge" class="state-idle">待機中</div>
-    <div id="subtitles">
-      <div id="user-line"></div>
-      <div id="assistant-line"></div>
+  <!-- speech bubble near the avatar -->
+  <div id="speech-bubble" class="hidden"><span id="speech-text"></span></div>
+
+  <!-- ===== stream overlay chrome ===== -->
+  <!-- top-left title plate -->
+  <div id="title-plate">
+    <div id="title-main">AI LIVE</div>
+    <div id="title-sub">おしゃべり配信中</div>
+  </div>
+
+  <!-- top-right NOW LIVE badge + state -->
+  <div id="live-badge"><span class="live-dot"></span><span id="live-label">NOW LIVE</span></div>
+  <div id="state-badge" class="state-idle">待機中</div>
+
+  <!-- COMMENTS panel (left) -->
+  <section id="comments-panel">
+    <div class="wing wing-left"></div>
+    <div class="wing wing-right"></div>
+    <header id="comments-header">COMMENTS</header>
+    <div id="comment-list"></div>
+  </section>
+
+  <!-- bottom-left handle tags -->
+  <div id="handles">
+    <div class="handle-tag"><span class="handle-icon">#</span><span id="tag-hashtag">ai_talking_live</span></div>
+    <div class="handle-tag"><span class="handle-icon">@</span><span id="tag-handle">my_ai_girlfriend</span></div>
+  </div>
+
+  <!-- ===== start overlay (audio gesture) ===== -->
+  <div id="overlay">
+    <div class="overlay-inner">
+      <div class="overlay-badge">LIVE2D</div>
+      <h1>AI-talking</h1>
+      <p id="overlay-status">読み込み中...</p>
+      <button id="start-btn" disabled>読み込み中...</button>
+      <p class="hint">※ VOICEVOX を起動しておいてください</p>
+      <p class="build-tag" id="build-tag"></p>
     </div>
   </div>
 

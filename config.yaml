@@ -100,3 +100,15 @@ live2d:
   scale: 1.8                     # zoom: full-body height ÷ screen height.
                                  #   ~1.8 = VTuber bust-up, ~0.9 = whole body
   y_anchor: 0.05                 # top of the head position (0=very top, bigger=下)
+  x_anchor: 0.72                 # horizontal position (0=left ... 1=right)
+
+# ---------------------------------------------------------------------
+# Stream overlay (VTuber look) - shown by the Live2D web UI
+# ---------------------------------------------------------------------
+overlay:
+  title: AI LIVE
+  subtitle: おしゃべり配信中
+  hashtag: ai_talking_live       # decorative # tag (bottom-left)
+  handle: my_ai_girlfriend       # decorative @ handle (bottom-left)
+  live_label: NOW LIVE
+  comments_title: COMMENTS
